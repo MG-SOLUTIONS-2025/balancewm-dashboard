@@ -11,7 +11,7 @@ const Home = () => {
         <div className=" md:col-span-1 xl = col-span-1">
           <TradingViewWidget 
             title="Market Overview"
-            scriptUrl="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+            scriptUrl="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js"
             config={MARKET_OVERVIEW_WIDGET_CONFIG}
             className="custom-chart"
           />
