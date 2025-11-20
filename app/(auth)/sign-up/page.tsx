@@ -33,6 +33,14 @@ const SignUp = () => {
   return (
     <>
       <h1 className='form-title'>Sign Up & Personalize</h1>
+
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-5' >
+        {/* INPUTS */}
+
+        <button type='submit' disabled={isSubmitting} className='yellow-btn w-full mt-5' >
+          {isSubmitting ? 'Creating Account' : 'Start Your Investing Journey'}
+        </button>
+      </form>
     </>
   )
 }
