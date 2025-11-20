@@ -1,5 +1,5 @@
 import React from 'react'
-import { Label } from '@radix-ui/react-dropdown-menu'
+import { Label } from '@/components/ui/label'
 import { Controller } from 'react-hook-form'
 
 import {

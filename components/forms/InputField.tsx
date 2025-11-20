@@ -1,4 +1,4 @@
-import { Label } from '@radix-ui/react-dropdown-menu'
+import { Label } from '@radix-ui/react-label'
 import React from 'react'
 import { Input } from '../ui/input'
 import { cn } from '@/lib/utils'
