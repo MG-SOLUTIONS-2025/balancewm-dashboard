@@ -1,4 +1,4 @@
-import { Label } from '@radix-ui/react-label'
+import { Label } from '@/components/ui/label'
 import React from 'react'
 import { Input } from '../ui/input'
 import { cn } from '@/lib/utils'

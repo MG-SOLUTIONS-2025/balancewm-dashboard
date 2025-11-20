@@ -76,8 +76,8 @@ const SignUp = () => {
           name="country"
           label="Country"
           control={control}
-          errors={errors.country}
-          reuqired 
+          error={errors.country}
+          required 
         />
 
         <SelectField 
