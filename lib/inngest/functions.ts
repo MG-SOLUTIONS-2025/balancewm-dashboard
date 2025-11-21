@@ -1,8 +1,9 @@
 import { inngest } from "./client";
 import { PERSONALIZED_WELCOME_EMAIL_PROMPT } from "./prompts";
+import { step } from "inngest";
 
 export const sendSignUpEmail = inngest.createFunction(
-    { id: 'sign-up-email' }, 
+    { id: 'sign-up-email' },
     { event: 'app/user.created' },
     async ({ event, step }) => {
         const userProfile = `
@@ -14,6 +15,38 @@ export const sendSignUpEmail = inngest.createFunction(
 
         const prompt = PERSONALIZED_WELCOME_EMAIL_PROMPT.replace(
             '{{userProfile}}', userProfile
-        )
+        );
+
+        const response = await step.ai.infer( //uses inngest custom ai inference offload server
+            'generate-welcome-email',
+            {
+                model: step.ai.models.gemini({
+                    model: 'gemini-2.5-flash-lite'
+                }),
+                body: {
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [
+                                { text: prompt }
+                            ]
+                        }
+                    ]
+                }
+            }
+        );
+
+        await step.run('send-welcome-email', async () => {
+            const part = response.candidates?.[0]?.content?.parts?.[0];
+            const introText = (part && 'text' in part ? part.text : null) || "Thanks for joining our stock dashboard platform that enables you to make smarter moves."
+
+            //email sending logic
+
+        })
+
+        return {
+            success: true,
+            message: 'Welcome email sent.'
+        }
     }
-)
+);
