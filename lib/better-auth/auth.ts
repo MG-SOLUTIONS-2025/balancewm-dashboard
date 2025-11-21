@@ -14,7 +14,7 @@ export const getAuth = async () => {
 
   if(!db) throw new Error("MongoDB connection not found");
 
-  authInstance = betterAuth({
+  authInstance = betterAuth({ //automatically handle sessions
     database: mongodbAdapter(db as any),
     secret: process.env.BETTER_AUTH_SECRET, 
     baseURL: process.env.BETTER_AUTH_URL,
