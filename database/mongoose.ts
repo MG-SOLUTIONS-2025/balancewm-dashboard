@@ -18,22 +18,22 @@ let cached = global.mongooseCache;
 
 // Initialize the cache if it doesn't exist yet
 // This runs once when the module is first imported
-if(!cached) {
+if (!cached) {
     cached = global.mongooseCache = { conn: null, promise: null };
 }
 
 export const connectToDatabase = async () => {
     // Validate that the MongoDB URI exists in environment variables
     // Throw an error early if it's missing to prevent silent failures
-    if(!MONGODB_URI) throw new Error('MONGODB_URI must be set within .env');
+    if (!MONGODB_URI) throw new Error('MONGODB_URI must be set within .env');
 
     // If we already have an active connection, return it immediately
     // This prevents creating duplicate connections on subsequent calls
-    if(cached.conn) return cached.conn;
+    if (cached.conn) return cached.conn;
 
     // If no connection promise exists, create one
     // mongoose.connect() returns a Promise that resolves to the mongoose instance
-    if(!cached.promise) {
+    if (!cached.promise) {
         // bufferCommands: false tells Mongoose to fail fast if not connected
         // rather than buffering operations and waiting for connection
         cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false })
@@ -51,8 +51,10 @@ export const connectToDatabase = async () => {
         throw err;  // Re-throw the error for the caller to handle
     }
 
-    // Log successful connection for debugging
-    console.log(`Connected to database ${process.env.NODE_ENV} - ${MONGODB_URI}`)
+    // // Log successful connection for debugging
+    // console.log(`Connected to database ${process.env.NODE_ENV} - ${MONGODB_URI}`)
+
+    console.log(`Connected to database (${process.env.NODE_ENV})`);
 
     return cached.conn;
 }
