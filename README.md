@@ -7,3 +7,9 @@ To preview, clone and run:
 ```bash
 npm run dev
 ```
+
+then run the inngest dev server:
+
+```bash
+npx inngest-cli@latest dev
+```
