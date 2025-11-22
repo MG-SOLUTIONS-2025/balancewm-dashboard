@@ -1,7 +1,6 @@
-import { sendWelcomeEmail } from "../nodemailer";
-import { inngest } from "./client";
-import { PERSONALIZED_WELCOME_EMAIL_PROMPT } from "./prompts";
-import { step } from "inngest";
+import { sendWelcomeEmail } from "@/lib/nodemailer";
+import { inngest } from "@/lib/inngest/client";
+import { PERSONALIZED_WELCOME_EMAIL_PROMPT } from "@/lib/inngest/prompts";
 
 export const sendSignUpEmail = inngest.createFunction(
     { id: 'sign-up-email' },
