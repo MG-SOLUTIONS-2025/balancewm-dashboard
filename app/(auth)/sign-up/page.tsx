@@ -8,9 +8,14 @@ import SelectField from '@/components/forms/SelectField';
 import { CountrySelectField } from '@/components/forms/CountrySelectField';
 import FooterLink from '@/components/forms/FooterLink';
 import { INVESTMENT_GOALS, PREFERRED_INDUSTRIES, RISK_TOLERANCE_OPTIONS } from '@/lib/constants';
+import { signUpWithEmail } from '@/lib/actions/auth.actions';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 
 const SignUp = () => {
+
+  const router = useRouter();
 
   const {
     handleSubmit,
@@ -27,13 +32,19 @@ const SignUp = () => {
       riskTolerance: 'medium',
       preferredIndustry: 'Technology',
     }, mode: "onBlur"
-  },  );
+  },);
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      // console.log("Sign up: ", data);
-      
+      const result = await signUpWithEmail(data);
+      if (result.success) router.push(
+        '/'
+      );
+
     } catch (e) {
       console.error(e);
+      toast.error('Sign up failed', {
+        description: e instanceof Error ? e.message : 'Failed to create an account.'
+      })
     }
   }
 
@@ -42,7 +53,7 @@ const SignUp = () => {
       <h1 className='form-title'>Sign Up & Personalize</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-5' >
-        <InputField 
+        <InputField
           name='fullname'
           label='Full Name'
           placeholder='John Doe'
@@ -52,18 +63,18 @@ const SignUp = () => {
         >
         </InputField>
 
-        <InputField 
+        <InputField
           name='email'
           label='Email'
           placeholder='john.doe@example.com'
           register={register}
           error={errors.email}
-          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: 'Email address is required'}}
+          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: 'Email address is required' }}
         >
         </InputField>
 
 
-        <InputField 
+        <InputField
           name='password'
           label='Password'
           placeholder='Enter a strong password'
@@ -74,15 +85,15 @@ const SignUp = () => {
         >
         </InputField>
 
-        <CountrySelectField 
+        <CountrySelectField
           name="country"
           label="Country"
           control={control}
           error={errors.country}
-          required 
+          required
         />
 
-        <SelectField 
+        <SelectField
           name='investmentGoals'
           label='Investment Goals'
           placeholder='Select your investment goal'
@@ -94,7 +105,7 @@ const SignUp = () => {
 
 
 
-        <SelectField 
+        <SelectField
           name='riskTolerance'
           label='Risk Tolerance'
           placeholder='Select your risk level'
@@ -106,7 +117,7 @@ const SignUp = () => {
 
 
 
-        <SelectField 
+        <SelectField
           name='preferredIndustry'
           label='Preferred Industry'
           placeholder='Select your preferred industry'
