@@ -24,6 +24,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { signOut } from "@/lib/actions/auth.actions"
 
 export function UserDropdown({ user }: { user: User }) {
     const router = useRouter();
@@ -33,6 +34,7 @@ export function UserDropdown({ user }: { user: User }) {
     // console.log('User name:', user?.name)  // Use optional chaining to be safe
 
     const handleSignOut = async () => {
+        await signOut();
         router.push('sign-in');
     }
 
@@ -74,7 +76,9 @@ export function UserDropdown({ user }: { user: User }) {
                         </div>
                     </div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator className="bg-gray-600" />
+                
                 <DropdownMenuItem onClick={handleSignOut} className="text-gray-100 class-md font-medium focus:bg-transparent focus:text-yellow-500 transition-colors cursor-pointer">
                     <LogOut className="h-4 w-4 mr-2 hidden sm:block" />
                     Logout
