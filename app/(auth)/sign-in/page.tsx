@@ -8,26 +8,38 @@ import SelectField from '@/components/forms/SelectField';
 import { CountrySelectField } from '@/components/forms/CountrySelectField';
 import FooterLink from '@/components/forms/FooterLink';
 import { INVESTMENT_GOALS, PREFERRED_INDUSTRIES, RISK_TOLERANCE_OPTIONS } from '@/lib/constants';
+import { signInWithEmail } from '@/lib/actions/auth.actions';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const SignIn = () => {
 
-    const {
-      handleSubmit,
-      register,
-      formState: { errors, isSubmitting }
-    } = useForm<SignUpFormData>({
-      defaultValues: {
-        email: '',
-        password: '',
-      }, mode: "onBlur"
-    },  );
-    const onSubmit = async (data: SignUpFormData) => {
-      try {
-        console.log("Sign in: ", data);
-      } catch (e) {
-        console.error(e);
-      }
+  const router = useRouter();
+
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting }
+  } = useForm<SignInFormData>({
+    defaultValues: {
+      email: '',
+      password: '',
+    }, mode: "onBlur"
+  },);
+  const onSubmit = async (data: SignInFormData) => {
+    try {
+      const result = await signInWithEmail(data);
+      if (result.success) router.push(
+        '/'
+      );
+
+    } catch (e) {
+      console.error(e);
+      toast.error('Sign in failed', {
+        description: e instanceof Error ? e.message : 'Failed to sign in.'
+      })
     }
+  }
 
 
 
@@ -38,18 +50,18 @@ const SignIn = () => {
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-5' >
 
 
-        <InputField 
+        <InputField
           name='email'
           label='Email'
           placeholder='john.doe@example.com'
           register={register}
           error={errors.email}
-          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: 'Email address is required'}}
+          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: 'Email address is required' }}
         >
         </InputField>
 
 
-        <InputField 
+        <InputField
           name='password'
           label='Password'
           placeholder='*********'
