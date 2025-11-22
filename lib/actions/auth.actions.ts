@@ -2,10 +2,16 @@
 
 import { auth } from "@/lib/better-auth/auth";
 import { inngest } from "@/lib/inngest/client";
-import { success } from "better-auth";
-import { count } from "console";
 
-export const signUpWithEmail = async ({ email, password, fullName, country, investmentGoals, riskTolerance, preferredIndustry }: SignUpFormData) => {
+export const signUpWithEmail = async ({ 
+    email, 
+    password, 
+    fullName, 
+    country, 
+    investmentGoals, 
+    riskTolerance, 
+    preferredIndustry 
+}: SignUpFormData) => {
     try{
         const response = await auth.api.signUpEmail({
             body: { email: email, password: password, name: fullName }
