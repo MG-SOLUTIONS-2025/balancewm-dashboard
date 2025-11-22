@@ -23,5 +23,5 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
         html: htmlTemplate
     }
 
-    await transporter.sendMail(mailOptions)
+    await transporter.sendMail(mailOptions);
 }
