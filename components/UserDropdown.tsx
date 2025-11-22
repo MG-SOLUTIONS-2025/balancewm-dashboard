@@ -25,14 +25,18 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function UserDropdown() {
+export function UserDropdown({ user }: { user: User }) {
     const router = useRouter();
+
+    // // This should log in the BROWSER console, not terminal
+    // console.log('User object:', user)
+    // console.log('User name:', user?.name)  // Use optional chaining to be safe
 
     const handleSignOut = async () => {
         router.push('sign-in');
     }
 
-    const user = { firstName: 'John', lastName: 'Doe', email: 'johndoe@example.com' };
+    // const user = { firstName: 'John', lastName: 'Doe', email: 'johndoe@example.com' };
 
     return (
         <DropdownMenu>
@@ -41,12 +45,12 @@ export function UserDropdown() {
                     <Avatar className="h-8 w-8">
                         <AvatarImage src='https://avatars.githubusercontent.com/u/244079107?s=400&u=98a0f3431bdef4b8cca75f4158ac335d28729a03&v=4' />
                         <AvatarFallback className="bg-yellow-500 text-yellow-900 text-sm font-bold">
-                            {user.firstName[0] + user.lastName[0]}
+                            {user.name[0]}
                         </AvatarFallback>
                     </Avatar>
                     <div className="hidden md:flex items-start">
                         <span className="text-base font-medium text-gray-400">
-                            {user.firstName + " " + user.lastName}
+                            {user.name}
                         </span>
                     </div>
                 </Button>
@@ -57,12 +61,12 @@ export function UserDropdown() {
                         <Avatar className="h-8 w-8">
                             <AvatarImage src='https://avatars.githubusercontent.com/u/244079107?s=400&u=98a0f3431bdef4b8cca75f4158ac335d28729a03&v=4' />
                             <AvatarFallback className="bg-yellow-500 text-yellow-900 text-sm font-bold">
-                                {user.firstName[0] + user.lastName[0]}
+                                {user.name[0]}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                             <span className="text-base font-medium text-gray-500">
-                                {user.firstName + " " + user.lastName}
+                                {user.name}
                             </span>
                             <span className="text-sm text-gray-500">
                                 {user.email}
