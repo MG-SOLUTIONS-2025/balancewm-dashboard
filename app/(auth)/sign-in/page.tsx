@@ -29,9 +29,17 @@ const SignIn = () => {
   const onSubmit = async (data: SignInFormData) => {
     try {
       const result = await signInWithEmail(data);
-      if (result.success) router.push(
-        '/'
-      );
+
+      if (result?.success) {
+        router.push('/');
+      } else {
+        toast.error('Sign in failed', {
+          description:
+            result && 'error' in result && typeof result.error === 'string'
+              ? result.error
+              : 'Failed to sign in.',
+        });
+      }
 
     } catch (e) {
       console.error(e);
@@ -56,7 +64,7 @@ const SignIn = () => {
           placeholder='john.doe@example.com'
           register={register}
           error={errors.email}
-          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: 'Email address is required' }}
+          validation={{ required: 'Email is required', pattern: /^[a-zA-Z0-9._%-]@[a-zA-Z0-9.-]\.[a-zA-Z]{2,}$/, message: 'Email address is required' }}
         >
         </InputField>
 
