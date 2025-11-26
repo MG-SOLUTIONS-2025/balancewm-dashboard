@@ -30,6 +30,14 @@ interface SearchCommandProps {
   initialStocks?: StockWithWatchlistStatus[]
 }
 
+/**
+ * Render a searchable command-style dialog for finding and selecting stocks, triggered by either a button or inline text.
+ *
+ * @param renderAs - Determines the trigger UI: `'button'` renders a Button, `'text'` renders an inline clickable label. Defaults to `'button'`.
+ * @param label - Visible text shown in the trigger. Defaults to `'Add stock'`.
+ * @param initialStocks - Initial list of stocks (with watchlist status) displayed before any search is performed. Defaults to an empty array.
+ * @returns The SearchCommand React element that shows a trigger and a debounced search dialog with results and item navigation.
+ */
 export function SearchCommand({
   renderAs = 'button',
   label = 'Add stock',
