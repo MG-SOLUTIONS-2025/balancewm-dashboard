@@ -11,6 +11,14 @@ import { POPULAR_STOCK_SYMBOLS } from '../constants';
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
 
+/**
+ * Fetches a URL and parses its JSON response.
+ *
+ * @param url - The request URL to fetch.
+ * @param revalidateSeconds - If provided, uses a cached response and sets Next.js `revalidate` to this value; otherwise forces a no-store request.
+ * @returns The parsed JSON response as `T`.
+ * @throws Error if the response status is not OK; the error message includes the HTTP status and any returned text when available.
+ */
 async function fetchJSON<T>(url: string, revalidateSeconds?: number): Promise<T> {
   const options: RequestInit & { next?: { revalidate?: number } } = revalidateSeconds
     ? { cache: 'force-cache', next: { revalidate: revalidateSeconds } }
