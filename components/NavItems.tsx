@@ -24,7 +24,7 @@ const NavItems = () => {
                             <SearchCommand 
                                 renderAs="text"
                                 label="Search"
-                                initialStocks={[]}
+                                initialStocks={[{symbol: 'TICKER', name: 'TESTING STOCK', exchange: 'NASDAQ', type: 'STOCKTYPE'}]}
                             />
                         </li>
                     )

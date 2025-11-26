@@ -10,6 +10,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Button } from "./ui/button"
+import { Loader2, Link, TrendingUp } from "lucide-react"
 
 interface SearchCommandProps {
   renderAs?: 'button' | 'text'
@@ -17,14 +18,18 @@ interface SearchCommandProps {
   initialStocks?: any[]
 }
 
-export function SearchCommand({ 
-  renderAs = 'button', 
-  label = 'Add stock', 
-  initialStocks = [] 
+export function SearchCommand({
+  renderAs = 'button',
+  label = 'Add stock',
+  initialStocks = []
 }: SearchCommandProps) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(false)
+  const [stocks, setStocks] = useState(initialStocks);
+
+  const isSearchMode = !!searchTerm.trim();
+  const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -46,8 +51,8 @@ export function SearchCommand({
     <>
       {/* 1. Render the Trigger (Text or Button) */}
       {renderAs === 'text' ? (
-        <span 
-          onClick={() => setOpen(true)} 
+        <span
+          onClick={() => setOpen(true)}
           className="cursor-pointer hover:text-yellow-500 transition-colors"
         >
           {label}
@@ -60,24 +65,46 @@ export function SearchCommand({
 
       {/* 2. Render the Dialog (Hidden until open is true) */}
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          placeholder="Type a command or search..."
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-        />
-        <CommandList>
+        <div className="search-field">
+          <CommandInput
+            placeholder="Type a command or search..."
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
+          {loading && <Loader2 className="search-loader" />}
+        </div>
+        <CommandList className="search-list">
           {loading ? (
-            <div className="py-6 text-center text-sm">Loading...</div>
+            <CommandEmpty className="search-list-empty">Loading...</CommandEmpty>
+          ) : displayStocks?.length === 0 ? (
+            <div className="search-list-indicator">
+              {isSearchMode ? 'No results found' : 'No stocks available'}
+            </div>
           ) : (
-            <>
-              <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup heading="Stocks">
-                {/* Example Items */}
-                <CommandItem onSelect={handleSelectStock}>AAPL</CommandItem>
-                <CommandItem onSelect={handleSelectStock}>TSLA</CommandItem>
-                <CommandItem onSelect={handleSelectStock}>NVDA</CommandItem>
-              </CommandGroup>
-            </>
+            <ul>
+              <div className="search-count">
+                {isSearchMode ? 'Search results' : 'Popular stocks'}
+                {` `}({displayStocks?.length || 0})
+              </div>
+              {displayStocks?.map((stock, i) => (
+                <li key={stock.symbol} className="search-item">
+                  <Link
+                    href={`/stocks/${stock.symbol}`}
+                    onClick={handleSelectStock}
+                    className="search-item-link"
+                  />
+                  <TrendingUp className='h-4 text-gray-500' />
+                  <div className="flex-1">
+                    <div className="search-item-name">
+                      {stock.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {stock.symbol} | {stock.exchange} | {stock.type}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </CommandList>
       </CommandDialog>
