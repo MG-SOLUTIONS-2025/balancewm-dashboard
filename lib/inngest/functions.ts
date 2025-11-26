@@ -1,7 +1,9 @@
-import { sendWelcomeEmail } from "@/lib/nodemailer";
+import { sendNewsSummaryEmail, sendWelcomeEmail } from "@/lib/nodemailer";
 import { inngest } from "@/lib/inngest/client";
-import { PERSONALIZED_WELCOME_EMAIL_PROMPT } from "@/lib/inngest/prompts";
-import { getAllUsersForNewsEmail } from "../actions/user.actions";
+import { NEWS_SUMMARY_EMAIL_PROMPT, PERSONALIZED_WELCOME_EMAIL_PROMPT } from "@/lib/inngest/prompts";
+import { getAllUsersForNewsEmail } from "@/lib/actions/user.actions";
+import { getWatchlistSymbolsByEmail } from "@/lib/actions/watchlist.actions";
+import { getNews } from "@/lib/actions/finnhub.actions";
 
 export const sendSignUpEmail = inngest.createFunction(
     { id: 'sign-up-email' },
@@ -46,7 +48,6 @@ export const sendSignUpEmail = inngest.createFunction(
             return await sendWelcomeEmail({ 
                 email, name, intro: introText
             });
-
         })
 
         return {
@@ -56,19 +57,77 @@ export const sendSignUpEmail = inngest.createFunction(
     }
 );
 
+const prodCron: string = '0 12 * * *';
+const devCron: string = '* * * * *';
+
 export const sendDailyNewsSummary = inngest.createFunction(
     { id: 'daily-news-summary'},
-    [ { event: 'app/send.daily.news' }, { cron: '0 12 * * *' } ], 
+    [ { event: 'app/send.daily.news' }, { cron: prodCron } ], 
     async ({ step }) => {
         // 1. Get all users
-        const users = await step.run('get-all-users', getAllUsersForNewsEmail);
+        const users = await step.run('get-all-users', async () => {
+            return await getAllUsersForNewsEmail();
+        });
 
         if(!users || users.length === 0) return { success: false, message: 'No users found for email.' };
         
-        // 2/ fetch personalized news
+        // 2. For each user, get watchlist and fetch news
+        for (const user of users) {
+             const result = await step.run(`process-user-${user.id}`, async () => {
+                const symbols = await getWatchlistSymbolsByEmail(user.email);
+                const news = await getNews(symbols);
+                
+                return { 
+                    user: user.email, 
+                    symbolsCount: symbols.length, 
+                    news,
+                    newsCount: news.length 
+                };
+            });
 
-        
-        // 3. summarize the news using ai for each user
-        //  4. send the emails. 
+            // 3. Summarize news via AI
+            if (result.newsCount > 0) {
+                const newsData = result.news.map(article => `
+                    - Headline: ${article.headline}
+                    - Summary: ${article.summary}
+                    - Source: ${article.source}
+                    - URL: ${article.url}
+                `).join('\n\n');
+
+                const prompt = NEWS_SUMMARY_EMAIL_PROMPT.replace('{{newsData}}', newsData);
+
+                const aiResponse = await step.ai.infer(
+                    `generate-news-summary-${user.id}`,
+                    {
+                        model: step.ai.models.gemini({
+                            model: 'gemini-2.5-flash-lite'
+                        }),
+                        body: {
+                            contents: [
+                                {
+                                    role: 'user',
+                                    parts: [
+                                        { text: prompt }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                );
+
+                // 4. Send the emails
+                await step.run(`send-email-${user.id}`, async () => {
+                    const part = aiResponse.candidates?.[0]?.content?.parts?.[0];
+                    const newsContent = (part && 'text' in part ? part.text : null) || "<p>Here is your daily news summary.</p>";
+
+                    await sendNewsSummaryEmail({
+                        email: user.email,
+                        newsContent
+                    });
+                });
+            }
+        }
+
+        return { success: true, message: 'Daily news summary emails sent successfully' };
     }
 )
