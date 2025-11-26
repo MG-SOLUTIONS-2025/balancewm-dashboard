@@ -26,7 +26,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/lib/actions/auth.actions"
 
-export function UserDropdown({ user }: { user: User }) {
+/**
+ * Renders a user account dropdown menu with profile, team, support, and sign-out actions.
+ *
+ * The menu displays the user's avatar, name, and email; provides grouped account, team, and support items (including an invite submenu and disabled API item); runs sign-out and navigates to '/sign-in' when "Logout" is clicked; and renders mobile navigation items using `initialStocks`.
+ *
+ * @param user - The current user whose name and email are shown in the menu.
+ * @param initialStocks - Initial stock data passed to the mobile navigation items.
+ * @returns The React element for the user account dropdown menu.
+ */
+export function UserDropdown({ user, initialStocks }: { user: User, initialStocks: StockWithWatchlistStatus[] }) {
     const router = useRouter();
 
     const handleSignOut = async () => {
@@ -162,7 +171,7 @@ export function UserDropdown({ user }: { user: User }) {
                 
                 {/* Mobile Navigation */}
                 <nav className="sm:hidden">
-                    <NavItems />
+                    <NavItems initialStocks={initialStocks} />
                 </nav>
             </DropdownMenuContent>
         </DropdownMenu>
