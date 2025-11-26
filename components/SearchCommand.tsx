@@ -28,20 +28,17 @@ interface SearchCommandProps {
   renderAs?: 'button' | 'text'
   label?: string
   initialStocks?: StockWithWatchlistStatus[]
+  className?: string // 1. Add className prop
 }
 
 /**
  * Render a searchable command-style dialog for finding and selecting stocks, triggered by either a button or inline text.
- *
- * @param renderAs - Determines the trigger UI: `'button'` renders a Button, `'text'` renders an inline clickable label. Defaults to `'button'`.
- * @param label - Visible text shown in the trigger. Defaults to `'Add stock'`.
- * @param initialStocks - Initial list of stocks (with watchlist status) displayed before any search is performed. Defaults to an empty array.
- * @returns The SearchCommand React element that shows a trigger and a debounced search dialog with results and item navigation.
  */
 export function SearchCommand({
   renderAs = 'button',
   label = 'Add stock',
-  initialStocks = []
+  initialStocks = [],
+  className = '' // Default to empty string
 }: SearchCommandProps) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -88,7 +85,7 @@ export function SearchCommand({
   // 3. Trigger debounce when searchTerm changes
   useEffect(() => {
     debouncedSearch()
-  }, [debouncedSearch]) // searchTerm is implicit because debouncedSearch depends on handleSearch which depends on searchTerm
+  }, [debouncedSearch]) 
 
   const handleSelectStock = () => {
     setOpen(false)
@@ -100,14 +97,18 @@ export function SearchCommand({
     <>
       {/* Trigger */}
       {renderAs === 'text' ? (
-        <span
+        // 2. Change to button for accessibility and apply className
+        <button
+          type="button"
           onClick={() => setOpen(true)}
-          className="cursor-pointer hover:text-yellow-500 transition-colors"
+          className={`focus:outline-none focus:text-yellow-500 ${className}`}
+          aria-label={label}
         >
           {label}
-        </span>
+        </button>
       ) : (
-        <Button onClick={() => setOpen(true)}>
+        // 3. Apply className to the Button component as well
+        <Button onClick={() => setOpen(true)} className={className}>
           {label}
         </Button>
       )}

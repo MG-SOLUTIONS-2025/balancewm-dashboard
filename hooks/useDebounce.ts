@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 
 /**
  * Creates a debounced function that delays invoking the provided callback until after the specified delay.
@@ -12,8 +12,17 @@ import { useCallback, useRef } from "react";
 export function useDebounce(callback: () => void, delay: number) {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Clear timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
     return useCallback(() => {
-        if(timeoutRef.current) {
+        if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
 
