@@ -10,7 +10,8 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Button } from "./ui/button"
-import { Loader2, Link, TrendingUp } from "lucide-react"
+import { Loader2, TrendingUp } from "lucide-react"
+import Link from "next/link"
 
 interface SearchCommandProps {
   renderAs?: 'button' | 'text'
@@ -26,7 +27,7 @@ export function SearchCommand({
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(false)
-  const [stocks, setStocks] = useState(initialStocks);
+  const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks);
 
   const isSearchMode = !!searchTerm.trim();
   const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10)
