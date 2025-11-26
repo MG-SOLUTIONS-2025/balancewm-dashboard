@@ -1,6 +1,9 @@
-import { sendWelcomeEmail } from "@/lib/nodemailer";
+import { sendNewsSummaryEmail, sendWelcomeEmail } from "@/lib/nodemailer";
 import { inngest } from "@/lib/inngest/client";
-import { PERSONALIZED_WELCOME_EMAIL_PROMPT } from "@/lib/inngest/prompts";
+import { NEWS_SUMMARY_EMAIL_PROMPT, PERSONALIZED_WELCOME_EMAIL_PROMPT } from "@/lib/inngest/prompts";
+import { getAllUsersForNewsEmail } from "@/lib/actions/user.actions";
+import { getWatchlistSymbolsByEmail } from "@/lib/actions/watchlist.actions";
+import { getNews } from "@/lib/actions/finnhub.actions";
 
 export const sendSignUpEmail = inngest.createFunction(
     { id: 'sign-up-email' },
@@ -42,10 +45,9 @@ export const sendSignUpEmail = inngest.createFunction(
 
             const { data: { email, name } } = event;
 
-            return await sendWelcomeEmail({ 
+            return await sendWelcomeEmail({
                 email, name, intro: introText
             });
-
         })
 
         return {
@@ -54,3 +56,84 @@ export const sendSignUpEmail = inngest.createFunction(
         }
     }
 );
+
+const prodCron: string = '0 12 * * *';
+const devCron: string = '* * * * *';
+
+export const sendDailyNewsSummary = inngest.createFunction(
+    { id: 'daily-news-summary' },
+    [{ event: 'app/send.daily.news' }, { cron: prodCron }],
+    async ({ step }) => {
+        // 1. Get all users
+        const users = await step.run('get-all-users', async () => {
+            return await getAllUsersForNewsEmail();
+        });
+
+        if (!users || users.length === 0) return { success: false, message: 'No users found for email.' };
+
+        // 2. For each user, get watchlist and fetch news
+        for (const user of users) {
+            try {
+             const result = await step.run(`process-user-${user.id || user.email}`, async () => {
+                    const symbols = await getWatchlistSymbolsByEmail(user.email);
+                    const news = await getNews(symbols);
+
+                    return {
+                        user: user.email,
+                        symbolsCount: symbols.length,
+                        news,
+                        newsCount: news.length
+                    };
+                });
+
+                // 3. Summarize news via AI
+                if (result.newsCount > 0) {
+                    const newsData = result.news.map(article => `
+                    - Headline: ${article.headline}
+                    - Summary: ${article.summary}
+                    - Source: ${article.source}
+                    - URL: ${article.url}
+                `).join('\n\n');
+
+                    const prompt = NEWS_SUMMARY_EMAIL_PROMPT.replace('{{newsData}}', newsData);
+
+                    const aiResponse = await step.ai.infer(
+`generate-news-summary-${user.id || user.email}`,
+                        {
+                            model: step.ai.models.gemini({
+                                model: 'gemini-2.5-flash-lite'
+                            }),
+                            body: {
+                                contents: [
+                                    {
+                                        role: 'user',
+                                        parts: [
+                                            { text: prompt }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    );
+
+                    // 4. Send the emails
+                    await step.run(`send-email-${user.id}`, async () => {
+                        const part = aiResponse.candidates?.[0]?.content?.parts?.[0];
+                        const newsContent = (part && 'text' in part ? part.text : null) || "<p>Here is your daily news summary.</p>";
+
+                        await sendNewsSummaryEmail({
+                            email: user.email,
+                            newsContent
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to process user ${user.email}:`, error);
+                // Continue to next user
+            }
+
+        }
+
+        return { success: true, message: 'Daily news summary emails sent successfully' };
+    }
+)
