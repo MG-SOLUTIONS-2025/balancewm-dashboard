@@ -5,6 +5,14 @@ import { getDateRange, validateArticle, formatArticle } from "@/lib/utils";
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 const FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
 
+/**
+ * Fetches JSON from a URL using an optional caching policy and returns the parsed response.
+ *
+ * @param url - The request URL to fetch.
+ * @param revalidateSeconds - If provided, enables cached responses with the given revalidation interval in seconds; if omitted, caching is disabled.
+ * @returns The parsed JSON response from the server.
+ * @throws Error if the HTTP response status is not OK.
+ */
 async function fetchJSON(url: string, revalidateSeconds?: number) {
   const options: RequestInit = revalidateSeconds
     ? { cache: "force-cache", next: { revalidate: revalidateSeconds } }
