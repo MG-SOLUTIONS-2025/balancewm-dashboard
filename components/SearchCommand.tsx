@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,11 +12,22 @@ import {
 import { Button } from "./ui/button"
 import { Loader2, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { searchStocks } from "@/lib/actions/finnhub.actions"
+import { useDebounce } from "@/hooks/useDebounce"
+
+// Define the type for your stock data (assuming this is global or imported)
+interface StockWithWatchlistStatus {
+  symbol: string
+  name: string
+  exchange: string
+  type: string
+  isInWatchlist: boolean
+}
 
 interface SearchCommandProps {
   renderAs?: 'button' | 'text'
   label?: string
-  initialStocks?: any[]
+  initialStocks?: StockWithWatchlistStatus[]
 }
 
 export function SearchCommand({
@@ -27,11 +38,13 @@ export function SearchCommand({
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(false)
-  const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks);
+  const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks)
 
-  const isSearchMode = !!searchTerm.trim();
+  // Derived state
+  const isSearchMode = !!searchTerm.trim()
   const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10)
 
+  // Toggle dialog with keyboard shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -43,14 +56,41 @@ export function SearchCommand({
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  // 1. Define the search logic (useCallback to keep reference stable)
+  const handleSearch = useCallback(async () => {
+    if (!searchTerm.trim()) {
+      setStocks(initialStocks)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const results = await searchStocks(searchTerm.trim())
+      setStocks(results)
+    } catch (error) {
+      setStocks([])
+    } finally {
+      setLoading(false)
+    }
+  }, [searchTerm, initialStocks])
+
+  // 2. Create the debounced function
+  const debouncedSearch = useDebounce(handleSearch, 300)
+
+  // 3. Trigger debounce when searchTerm changes
+  useEffect(() => {
+    debouncedSearch()
+  }, [debouncedSearch]) // searchTerm is implicit because debouncedSearch depends on handleSearch which depends on searchTerm
+
   const handleSelectStock = () => {
-    console.log("Stock selected")
-    setOpen(false) // Close dialog on selection
+    setOpen(false)
+    setSearchTerm("")
+    setStocks(initialStocks)
   }
 
   return (
     <>
-      {/* 1. Render the Trigger (Text or Button) */}
+      {/* Trigger */}
       {renderAs === 'text' ? (
         <span
           onClick={() => setOpen(true)}
@@ -64,7 +104,7 @@ export function SearchCommand({
         </Button>
       )}
 
-      {/* 2. Render the Dialog (Hidden until open is true) */}
+      {/* Dialog */}
       <CommandDialog open={open} onOpenChange={setOpen}>
         <div className="search-field">
           <CommandInput
@@ -87,13 +127,17 @@ export function SearchCommand({
                 {isSearchMode ? 'Search results' : 'Popular stocks'}
                 {` `}({displayStocks?.length || 0})
               </div>
-              {displayStocks?.map((stock, i) => (
-                <li key={stock.symbol} className="search-item">
+              {displayStocks?.map((stock) => (
+                <li key={stock.symbol} className="search-item relative group">
+                   {/* Make the whole row clickable via absolute positioning */}
                   <Link
                     href={`/stocks/${stock.symbol}`}
                     onClick={handleSelectStock}
-                    className="search-item-link"
-                  />
+                    className="search-item-link absolute inset-0 z-10"
+                  >
+                     <span className="sr-only">View {stock.symbol}</span>
+                  </Link>
+                  
                   <TrendingUp className='h-4 text-gray-500' />
                   <div className="flex-1">
                     <div className="search-item-name">
